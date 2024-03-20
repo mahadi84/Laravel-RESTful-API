@@ -1,0 +1,47 @@
+Why Policy and Gate?
+ How will I restrict the General Users who can only see their transactions/Info?
+ How do I as Admin see all Users, Buyers, and Buyer's transactions?
+
+
+=================Create and Use Policy====================
+01.--php artisan make:policy BuyerPolicy --model=Buyer
+02.--Check now App\Policies Folder
+03.--Create function(s) as per your need for example;
+    use App\Models\User;
+    use App\Models\Buyer;
+     public function view(User $user, Buyer $buyer){
+          return $user->id === $buyer->id;
+      }
+04.--Register policy into AuthServiceProvider.php
+   Buyer::class=> BuyerPolicy::class
+
+05.-- Restrict Contoller's function with policy(with middleware)
+  public function __construct(){
+    $this->middleware('can:view,buyer')->only('index')
+  }
+
+=======================Create and Use Gate====================
+01. Add these lines boot() to AuthServiceProvider.php
+
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
+  Gate::define('admin-action', function (User $user): bool{
+            return $user->isAdmin();
+        });
+
+02. To use multiple places I can create a trait or in ApiController.
+
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Auth\Access\AuthorizationException;
+    protected function allowedAdminAction(){
+        if (!Gate::allows('admin-action')) {
+            throw new AuthorizationException('This action is unauthorized');
+        }
+        
+    }
+
+03. Call the above function to inside Any controller's functions index() for example.
+ $this->allowedAdminAction();
+
+
+that's it.

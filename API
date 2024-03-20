@@ -1,0 +1,110 @@
+Date: 06-March-2024
+
+
+00. Why API? What is the advantage of it?
+01. If I write all API Routes to the web, what is the problem?
+02. How to implement like:
+    a) All admin can see all users, buyers, etc But only selected admin can UPDATE/DELETE  all users' info.
+    b) Normal users see only his info?
+    c) Seller must have a Product and Buyer(User) must have a transaction.
+
+03. Why Authentication in API? Why session is not enough?
+04. Difference among Passport Clients, Personal Clients, Password Clients, and Authorization Clients.
+05. Why Passport is not enough to protect/Authorize?
+06. What's the difference between Gate and Policy?
+    
+    WHY ARE THESE USED FOR and HOW?
+        $this->middleware('transform.input:' . UserTransformer::class)->only(['update']); //** hide real table field name while updating data.
+        $this->middleware('client.credentials')->only(['resend']); //**Any passport-client with Only access_token.
+        $this->middleware('auth:api')->except(['showRegisterForm', 'store', 'verify', 'resend']); //** Passport Client with grant_type password, associated with Username and Password.      
+        $this->middleware('scope:manage-account')->only(['show', 'update']); //** Passport Client with grant_type password, associated with Username and Password and SCOPE.
+        $this->middleware(['auth:api', 'scopes:edit,create,delete'])->except(['index', 'show']); //** Passport Client with grant_type password, associated with Username and Password and SCOPES.
+        $this->middleware('can:view-user,user')->only('show'); //** Passport Client with grant_type password, associated with Username and Password and POLICY.
+               public function index(){
+                    if (!Gate::allows('admin-action')) {  //** Passport Client with grant_type password, associated with Username and Password and GATE
+                        throw new AuthorizationException('This action is unauthorized');
+                    }
+                    $users = User::all();
+                    return $this->showAll($users);
+                }
+
+
+07. What's the solution for the below scenario for API:
+    A) Admin User with scope:manage-account: will be able to function INDEX, SHOW, UPDATE and DELETE.
+    B) Admin User but without scope:manage-account: will be able to function INDEX all, SHOW and UPDATE his info only.
+    C) General User without scope:manage-account: will be able to function SHOW and UPDATE his info only.
+
+
+08. How to get a user ID from an Access Token?
+09. How to hide the original table's field's name while showing, updating, and deleting to the other name as per my choice?
+
+
+
+
+=============== 01. Build a RESTful API for a market system using Laravel and dominate the most challenging features of APIs with Laravel============================
+By JuanD MeGon At Udemy.com --I've completed at 9-Feb-2024
+
+--You will learn this about the development of a RESTful API with Laravel:
+--Using the Laravel PHP artisan for code and components generation
+--Usage and creation of middleware on Laravel
+--The Laravel Resource routes and controllers (ideal for RESTful APIs)
+
+--Fully supported JSON format responses for a JSON RESTful API
+--Validation of requests directly from the Laravel Controllers
+--Handling all types of exceptions and errors from Laravel handler
+--Complex operations involving up to three resources/models for a specific operation
+
+--Usage of Laravel dependency injection and model binding
+--Generation of the database structure using Laravel migrations
+--Automatic insertion of fake data into the database through "faker," using Laravel factories, and seeders
+--Laravel Sessions and access_token authentication for the RESTful API. Yes, Both!
+
+--Using Laravel Passport to protect the RESTful API with OAuth2
+--Pagination of results using Laravel collections
+--Using URL parameters to execute actions (the RESTful approach)
+--Sorting results based on URL parameters with a RESTful approach
+
+--Filtering results using URL parameters
+--Caching responses using Laravel Cache System
+--Limitation of requests using the Laravel middleware
+--Implementing HATEOAS on Laravel (a pure RESTful API must use HATEOAS)
+
+--Using PHP Fractal for transforming responses
+--Usage of CORS on the API responses to allow JavaScript-based clients and web browsers.
+--Use the Laravel Policies and Gates to handle the user's authorization layer.
+
+Much more!!
+
+
+======================= 02. http-client-laravel-guzzle-requests-consume-apis-services ================================
+By JuanD MeGon At Udemy.com
+
+During the course, you will learn this...
+
+For the HTTP Client:
+How to consume a service or API through HTTP requests from Laravel
+How to authenticate and create user sessions in your HTTP Client with information from other services
+How to automate the process of obtaining an access token to authorize the requests of your HTTP Client
+The different ways to obtain an access token from a service that uses OAuth2 and its differences (grant types)
+
+How to handle the expiration times of a token and avoid losing access to information
+How to handle access errors to the consumed HTTP service or API and how to proceed
+How to handle and authenticate protected requests associated with a user's information from the HTTP Client
+Use of Guzzle from Laravel, to send HTTP requests to whatever HTTP service or API
+
+How to configure and prepare Laravel to make requests to any HTTP service or API
+Use of Bootstrap 4 to show the information obtained from the consumed services
+Handling and preparing to resolve exceptions and errors when consuming external services with Laravel
+
+
+For any Laravel project:
+How to install Laravel in your development environment for professional projects
+Configure Laravel, in your environment for an agile and simple development
+Build of a professional, modular and, a scalable project with Laravel
+Creation of routes, views, templates, controllers and more with Laravel
+
+Handling errors and internal exceptions of the Laravel project
+Installation of dependencies to a Laravel project (Guzzle case)
+Of course, that's not all. Take a look at the full description of sections and classes for more details.
+
+-

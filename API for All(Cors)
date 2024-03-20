@@ -1,0 +1,18 @@
+
+How to allow others vue.js or any javascript website to access my API?
+
+STEP-01. (Check the permission first)
+--First, Go to http://www.test-cors.org/ (Remember to go to with http not https )
+--Put my localhost site and check if any result returns for  get request from my website.
+
+STEP-02.(Allow the api for others)
+--For this laravel-cors comes into play which is already included in laravel just have to use it.
+--Got to config>cors.php and replace 'api/*',  to '*' the rest will be as it is.
+--add below line to kernel.php>api (As we will allow only api route to access others) 
+\Illuminate\Http\Middleware\HandleCors::class,
+
+STEP-03:
+If API is allowed will show *  in the header for the result of every request in POSTMAN.
+
+
+

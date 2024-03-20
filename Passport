@@ -1,0 +1,261 @@
+
+=======================01. Install Passport =====================
+	composer require laravel/passport
+
+	Check with php artisan cmd
+	whether passport:client, passport:install, passport:keys shows or not
+
+	passport:client  | Create a client for issuing access tokens
+	passport:install | Run the commands neccessary to prepare Passport for use
+	passport:keys    | Create the encryption keys for Api Authentication
+
+If time out error comes then run the below command
+COMPOSER_MEMORY_LIMIT=-1 composer require laravel/passport
+
+02. Migration
+	php artisan migrate
+
+03. User Model
+	use Laravel\Passport\HasApiTokens;
+	User Class{
+		use HasApiTokens, HasFactory, Notifiable;
+	}
+
+04. Update config/auth.php like the below api driver to passport
+
+    'guards' => [
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
+    ],
+
+05. Update App\Providers\AuthServiceProvider
+
+use Laravel\Passport\Passport;
+
+In the boot function add:
+        Passport::tokensExpireIn(now()->addDays(15));
+    	Passport::refreshTokensExpireIn(now()->addDays(30));
+    	Passport::personalAccessTokensExpireIn(now()->addMonths(6));
+	Passport::enableImplicitGrant(); // For Implicit Grant
+
+
+
+=====================GRAND TYPE: CLIENT (Add and Create)==================================
+
+STEP:01:-   Add a line to kernel.php
+		protected $middlewareAliases = [
+	          'client.credentials' => \Laravel\Passport\Http\Middleware\CheckClientCredentials::class,
+		]
+
+STEP:02:-  Add the below lines to the controller with the FUNCTIONS NAME I want to control (VID_180)
+ 	Into UserController:-------- 
+		public function __construct(){
+	        $this->middleware('client.credentials')->only(['store', 'resend']);
+	    	}
+
+	Into Other controllers:------	
+	 	public function __construct(){
+	        $this->middleware('client.credentials')->only(['index', 'show']);
+	    	}
+
+STEP:03:-  Create a client(php artisan passport:client) and test it (VID_181)
+
+ 	Which User ID should the client be assigned to?
+	 --Choose any user ID from users_table (Press Enter)
+	What should we name the Client?
+	 --Choose a name (Press Enter)
+	Where should we redirect the request after authorization?
+	--(Press Only Enter)
+
+***Copy the Client ID and Client Secret for use.
+
+
+STEP:04:-  Open (Postman)  http://localhost:8000/oauth/token
+ 	/Body>form-data
+ 	grant_type: client_credentials
+ 	client_id: 
+ 	client_secret:
+    AND send a POST request, It will generate 
+	 token_type: 
+	 expire-time: 
+         access_token: 
+
+STEP:05:-
+	Copy the access_token and go to protected url http://localhost:8000/products for example
+    	-Select auth type Oauth.2, Bearer and past the code
+
+=====================================CREATE PERSONAL CLIENT with TOKEN===============================
+***INCOMPLETE TOPIC
+  Create a Password Account
+	--php artisan passport:client --personal
+	
+	What should we name the personal access client?
+	>Press Enter
+	
+	Personal access client created successfully.
+	Client ID: 4
+	Client secret: K6rNkv0KBfSLTHXf1HHBPdGPB14lTouG4IrkInlN
+    Note: Personal token has no expiration time. this is created only for test perpose.
+
+	CREATE: ACCESS_TOKEN:-----
+	Route::get('dashboard/personal-access-token', function(){
+	$user = User::find(6); 
+	return $token = $user->createToken('Token Name')->accessToken;
+	});
+
+
+============================ GRANT TYPE: PASSWORD CLIENT (Add and Create)======================================
+STEP:01:- 
+	Go to API controller and add:
+      --Into ApiController.php
+ 	Public function __construct(){
+	  $this->middleware('auth:api')
+	}
+	
+      --To use only GRAND-TYPE: PASSWORD
+	public function __construct(){
+           parent::__construct();    
+    	}
+      
+STEP:02:-       
+	--Here INDEX method only can CLIENT role user Where OTHER method(like store,update or destroy) need one user with both role:
+	public function __construct(){
+        	$this->middleware('auth:api')->except(['index']);
+        	$this->middleware('client.credentials')->only(['index']);
+         }
+
+STEP:03:- . Create Password Account
+	--php artisan passport:client --password
+	
+	What should we name the password grant client?[projectName Password Grant Client]
+	>Choose and write and remember the name.mahadi for example.
+	Which user provider should this client use to retrive users?[users][0] users
+	> Press Enter
+	Password grant client created successfully.
+	Client ID: 2
+	Client secret: ReSO8Lu4ce1qY8itLC0uNgmnr5RUtyUKHcMXDsfR
+
+STEP:04:-  
+	Open (Postman)  http://localhost:8000/oauth/token
+ 	/Body>form-data
+	client_id:
+	client_secret:
+ 	grant_type: password
+	username:
+	password:
+
+    AND send a POST request, It will generate;
+	 token_type: 
+	 expire-time: 
+         access_token: 
+         refresh_token:
+
+STEP:05:-  
+	Copy the access_token and go to protected URL http://localhost:8000/products for example
+    	-Select auth type Oauth.2, Bearer and PAST the access_token
+
+
+===================================CREATE AUTHORIZATION GRANT_TYPE=========================
+Tutorial: https://www.youtube.com/watch?v=PTFPMAX_88s
+
+-----------Step:01 Create a user with below Blade (It supports Bootstrap) and route INSIDE BREEZ--------------
+	WEB-ROUTE:
+	
+	use Illuminate\Http\Request;
+	Route::get('/dashboard/clients', function(Request $request){
+	        return view('clients',['clients'=>$request->user()->clients]);
+	    })->middleware(['auth'])->name('dashboard.clients');
+
+	BLADE:
+		 <a href="{{route('dashboard.clients')}}">Clients</a>
+	-------List of Created Clients-------
+                    @forelse ($clients as $client)
+                    <p> <b>Client Id:</b>  {{$client->id}}</p>
+                    <p><b>Client Redirect:</b>   {{$client->redirect}}</p>
+                    <p><b>Client Secret:</b>  {{$client->secret}}</p>
+                    @empty
+                    <p>No Client Found</p>                       
+                    @endforelse
+	------------Create Client Form-------
+		<form action="/oauth/clients" method="post">
+                        <div class="mt-3">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" placeholder="Client Name">
+                        </div>
+                        <div class="mt-3">
+                            <label for="redirect">Redirect Url</label>
+                            <input type="text" id="redirect" name="redirect" placeholder="Redirect URL">
+                        </div>
+                        @csrf
+                        <div class="mt-1">
+                            <button type="submit" >ClientCreate</button>
+                        </div>
+                    </form>
+
+
+------------STEP:02: Generate Code and Authentication Token-----------------
+**State parameters require 40string
+**To add more than one scope parameter separated by %20 example: scope=manage-account%20manage-products
+http://localhost:8000/oauth/authorize?client_id=7&redirect_uri=https://localhost.com&response_type=code&scope&state=asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf
+Copy the code just generated into  the browser
+
+Open (Postman)  http://localhost:8000/oauth/token
+ 	/Body>form-data
+	client_id:
+	client_secret:
+ 	grant_type: authorization_code
+	redirect_uri:
+	code: That I got from the browser
+	
+	**Send POST method in POSTMAN
+	It will generate an access token for use.
+
+========================What is SCOPE? How to Create, Name, and Register Scope in Middleware=======================================
+
+SCOPE: is the role of a user 
+
+STEP:01: Add these lines to AuthServiceProvider.php in boot()
+
+	 Passport::tokensCan([
+            'purchase-product' => 'Create a new transaction for a specific product',
+            'manage-products' => 'Create, read, update, and delete products (CRUD)',
+            'manage-account' => 'Read your account data, id, name, email, if verified, and if admin (cannot read password). Modify your account data (email, and password). Cannot delete your account',
+            'read-general' => 'Read general information like purchasing categories, purchased products, selling products, selling categories, your transactions (purchases and sales)',
+        ]);
+
+
+STEP:02: Add these lines to kernel.php
+	protected $middlewareAliases = [
+		'scope' => \Laravel\Passport\Http\Middleware\CheckForAnyScope::class,
+        	'scopes' => \Laravel\Passport\Http\Middleware\CheckScopes::class,
+	];
+
+
+STEP:03: add scope middleware in the controller like below, ProductCategoryController for example:
+	public function __construct(){
+        	$this->middleware('scope:manage-products')->except('index');
+        	$this->middleware('can:add-category,product')->only('update');
+        	$this->middleware('can:delete-category,product')->only('destroy');
+        }
+
+STEP:04: Create Access_token for PASSWORD User with Scope
+
+	Open (Postman)  http://localhost:8000/oauth/token
+ 	/Body>form-data
+	client_id:
+	client_secret:
+ 	grant_type: password
+	username:
+	password:
+	scope: manage-products,manage-account Or only * for All Scope
+
+	**Send POST method in POSTMAN
+
+======================= Check User Scope========================
+ In any controller write and check:
+	if (request()->user()->tokenCan('manage-account')){
+             return $this->showOne(request()->user());
+        }
+
