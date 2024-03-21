@@ -1,0 +1,48 @@
+
+----Route(WEB), Controller and Blade-----
+
+
+>>>>> Create FORM (After Log into Breez) <<<<<<<<<<<<<<<<<<<
+            <form action="/oauth/clients" method="POST">
+            @csrf
+            <input name="name" type="name">
+            <input name="redirect" type="text"> //redirect URI - none for client credentials
+            </form>
+
+>>>>> SHOW CLIENTs(ROUTE) **CREATED BY LOGGED IN USER  <<<<<<<<<<<<
+            Route::get('dashboard/clients', function(Request $request){
+                return view('clients', ['clients'=> $request->user()->clients]);
+            })->name('dashboard.clients');
+
+
+>>>>> SHOW CLIENTS(BLADE)<<<<<<<<<<<<<<<<<<
+            @forelse ($clients as $client)
+            {{$client->id}}{{$client->name}}
+            {{$client->redirect}}{{$client->secret}}
+            @empty                       
+            @endforelse
+
+
+>>>> DELETE/REVOCK CLIENT ID  <<<<<<<<<<<<<<
+use Laravel\Passport\Token;
+public function revokeToken(Request $request){
+    $request->user()->tokens()->where('id', $tokenId)->delete();
+    return response(['message' => 'Token revoked']);
+}
+
+
+>>>>> Create CLIENT  <<<<<<<<<<<
+            Route::get('client', function (\Laravel\Passport\ClientRepository $clientRepository, Request $request) {
+               return view('client-token', ['client_token' => $clientRepository->create(null, $request->name, $request->redirect)]); 
+            })->name('dashboard.clients');
+
+>>> Controller <<<<<<<<<<<<<<<<<<<
+
+            public function CreateClient(\Laravel\Passport\ClientRepository $clientRepository, Request $request) {                                                                        
+               return view('client-token', ['client_token' => $clientRepository->create(null, $request->name, $request->redirect)]); 
+            }
+
+*** $clientRepository->create(user_id, 'name', 'redirect')])
+                        // 1st param is the user_id - none for client credentials
+                        // 2nd param is the client name
+                        // 3rd param is the redirect URI - none for client credentials
