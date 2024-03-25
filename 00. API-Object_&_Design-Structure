@@ -11,7 +11,8 @@ DESIGN STRUCTURE:
     -Route(api.php) 
     -Convert Response to JSON  
     -Pagination -Search & Sort By 
-    -Show error(Like Invalid Url/Method/Permission/Scope etc) 
+    -Show error(Like Invalid Url/Method/Permission/Scope etc)
+    -Transformer to HIDE table attribute
 
     -------FOR AUTHENTICATION(Mainly Secure the Header-Request as API is stateless connection)--------
     -Passport(access token with Client, Oauth2, Password, refresh_token) 
