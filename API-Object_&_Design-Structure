@@ -1,5 +1,26 @@
 Date: 06-March-2024
 
+OBJECTs: 
+    I will create Resource(RESTful-API) Server which will store data of my/other clients. 
+    And it will handle only HTTP request.
+
+DESIGN STRUCTURE:
+     -------FOR CRUD--------
+    -Model 
+    -Controller 
+    -Route(api.php) 
+    -Convert Response to JSON  
+    -Pagination -Search & Sort By 
+    -Show error(Like Invalid Url/Method/Permission/Scope etc) 
+
+    -------FOR AUTHENTICATION(Mainly Secure the Header-Request as API is stateless connection)--------
+    -Passport(access token with Client, Oauth2, Password, refresh_token) 
+    -Gate & Policy 
+    -Admin User
+
+
+==========================================
+
 
 00. Why API? What is the advantage of it?
 01. If I write all API Routes to the web, what is the problem?
@@ -75,36 +96,3 @@ By JuanD MeGon At Udemy.com --I've completed at 9-Feb-2024
 
 Much more!!
 
-
-======================= 02. http-client-laravel-guzzle-requests-consume-apis-services ================================
-By JuanD MeGon At Udemy.com
-
-During the course, you will learn this...
-
-For the HTTP Client:
-How to consume a service or API through HTTP requests from Laravel
-How to authenticate and create user sessions in your HTTP Client with information from other services
-How to automate the process of obtaining an access token to authorize the requests of your HTTP Client
-The different ways to obtain an access token from a service that uses OAuth2 and its differences (grant types)
-
-How to handle the expiration times of a token and avoid losing access to information
-How to handle access errors to the consumed HTTP service or API and how to proceed
-How to handle and authenticate protected requests associated with a user's information from the HTTP Client
-Use of Guzzle from Laravel, to send HTTP requests to whatever HTTP service or API
-
-How to configure and prepare Laravel to make requests to any HTTP service or API
-Use of Bootstrap 4 to show the information obtained from the consumed services
-Handling and preparing to resolve exceptions and errors when consuming external services with Laravel
-
-
-For any Laravel project:
-How to install Laravel in your development environment for professional projects
-Configure Laravel, in your environment for an agile and simple development
-Build of a professional, modular and, a scalable project with Laravel
-Creation of routes, views, templates, controllers and more with Laravel
-
-Handling errors and internal exceptions of the Laravel project
-Installation of dependencies to a Laravel project (Guzzle case)
-Of course, that's not all. Take a look at the full description of sections and classes for more details.
-
--
