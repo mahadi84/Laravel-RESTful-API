@@ -1,17 +1,17 @@
 Date: 06-March-2024
 
-OBJECTs: 
+OBJECTIVEs: 
     I will create Resource(RESTful-API) Server which will store data of my/other clients. 
     And it will handle only HTTP request.
 
 DESIGN STRUCTURE:
      -------FOR CRUD--------
-    -Model 
+    -Model (User(Buyer, Seller), Product, Category, Transaction) and their relationship
     -Controller 
     -Route(api.php) 
     -Convert Response to JSON  
     -Pagination -Search & Sort By 
-    -Show error(Like Invalid Url/Method/Permission/Scope etc)
+    -Show error(Like Invalid Url/Method/Permission/Scope etc) ()
     -Transformer to HIDE table attribute
 
     -------FOR AUTHENTICATION(Mainly Secure the Header-Request as API is stateless connection)--------
