@@ -9,10 +9,10 @@ DESIGN STRUCTURE:
     -Model (User(Buyer, Seller), Product, Category, Transaction) and their relationship
     -Controller 
     -Route(api.php) 
-    -Convert Response to JSON  
+    -Convert Response to JSON and Transform data to show  (Trait_ApiResponser.php)
     -Pagination -Search & Sort By 
-    -Show error(Like Invalid Url/Method/Permission/Scope etc) ()
-    -Transformer to HIDE table attribute
+    -Show error(Like Invalid Url/Method/Permission/Scope etc) (Exceptions>Handler.php)
+    -Transformer to HIDE table attribute (update and Delete)
 
     -------FOR AUTHENTICATION(Mainly Secure the Header-Request as API is stateless connection)--------
     -Passport(access token with Client, Oauth2, Password, refresh_token) 
