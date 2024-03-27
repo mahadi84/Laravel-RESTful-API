@@ -1,15 +1,5 @@
 
-============================= User-Model =====================================
-
-<?php
-namespace App\Models;
-
-use App\Transformers\UserTransformer;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Passport\HasApiTokens;
-use Str;
+====================== 01. USER-Model =================
 
 class User extends Authenticatable{
     use HasApiTokens, HasFactory, Notifiable;
@@ -25,8 +15,6 @@ class User extends Authenticatable{
 
     protected $fillable = ['name'];
 --
-
-
     public function setNameAttribute($name){
         $this->attributes['name'] = strtolower($name);
     }
@@ -39,11 +27,9 @@ class User extends Authenticatable{
         $this->attributes['email'] = strtolower($email);
     }
 
-
     public function isAdmin(){
         return $this->admin == User::ADMIN_USER;
     }
-
 
     public function isVerified(){
         return $this->verified== User::VERIFIED_USER;
@@ -54,3 +40,90 @@ class User extends Authenticatable{
     }
 
 }
+
+======================== 02. CATEGORY =========================
+class Category extends Model{
+    use HasFactory;
+    public $transformer = CategoryTransformer::class;    
+    protected $fillable = ['name','description'];
+    protected $hidden = ['pivot'];
+
+    public function products(){
+    	return $this->belongsToMany(Product::class);
+    }
+}
+
+====================== 03. PRODUCTS =========================
+class Product extends Model{
+    use HasFactory;
+
+    const AVAILABLE_PRODUCT = 'available';
+	const UNAVAILABLE_PRODUCT = 'unavailable';
+
+    public $transformer= ProductTransformer::class;
+
+    protected $fillable = [	'name',	'description','quantity','status','image', 'seller_id', ];
+    protected $hidden = [ 'pivot' ];
+
+    public function isAvailable(){
+    	return $this->status == Product::AVAILABLE_PRODUCT;
+    }
+
+    public function seller(){
+        return $this->belongsTo(Seller::class);
+    }
+
+    public function transactions(){
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function categories(){
+        return $this->belongsToMany(Category::class);
+    }
+}
+
+==================== 04.TRANSACTION ==============================
+class Transaction extends Model{
+    use HasFactory;
+
+    public $transformer= TransactionTransformer::class;
+
+    protected $fillable = ['quantity','buyer_id','product_id'];
+
+    public function buyer(){
+       return $this->belongsTo(Buyer::class);
+    }
+    public function product(){
+        return $this->belongsTo(Product::class);
+    }
+}
+
+===================== 05. SELLER ===============================
+class Seller extends User{
+    use HasFactory;
+
+    protected static function booted(): void{
+        parent::boot();
+        static::addGlobalScope(new SellerScope);
+    }
+
+    public function products()   {
+    	return $this->hasMany(Product::class);
+    }
+   
+}
+
+===================== 06. BUYER ===============================
+class Buyer extends User{
+    use HasFactory;
+   
+    protected static function booted(): void{
+        parent::boot();
+        static::addGlobalScope(new BuyerScope);
+    }
+
+    public function transactions(){
+    	return $this->hasMany(Transaction::class);
+    }
+}
+
