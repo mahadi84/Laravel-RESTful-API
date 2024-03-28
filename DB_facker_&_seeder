@@ -1,0 +1,132 @@
+=========================FACKER===========================
+
+------------------------Users------------------------
+class UserFactory extends Factory{
+    //The current password being used by the factory.
+    protected static ?string $password;
+
+    public function definition(): array{ 
+        return [
+            'name' => fake()->name,
+            'email' => fake()->unique()->safeEmail,
+            // 'password' => static::$password ??= Hash::make('password'),
+            'password' => '123456',
+            'remember_token' => Str::random(10),
+            'verified' => $verified = fake()->randomElement([User::VERIFIED_USER, User::UNVERIFIED_USER]),
+            'verification_token' => $verified == User::VERIFIED_USER ? null : User::generateVerificationCode(),
+            'admin' => $verified = fake()->randomElement([User::ADMIN_USER, User::REGULAR_USER]),
+        ];
+    }
+
+    //Indicate that the model's email address should be unverified.
+    public function unverified(): static    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
+        ]);
+    }
+}
+
+------------------------category-----------------------------------
+class CategoryFactory extends Factory{
+    public function definition(): array{
+        return [
+            'name' => fake()->randomElement(['electronics', 'food_&_grocery', 'household', 'book', 'travel']),
+            'description' => fake()->paragraph(1),
+        ];
+    }  
+}
+
+
+------------------------product--------------------------
+class ProductFactory extends Factory{   
+    public function definition(): array    {
+        return [
+            'name' => fake()->word(),
+            'description' => fake()->paragraph(1),
+            'quantity' => fake()->numberBetween(1, 10),
+            'status' => fake()->randomElement([Product::AVAILABLE_PRODUCT, Product::UNAVAILABLE_PRODUCT]),
+            'image' => fake()->randomElement(['1.jpg', '2.jpg', '3.jpg']),
+            'seller_id' => User::all()->random()->id,
+            // User::inRandomOrder()->first()->id
+        ];
+    }
+}
+
+------------------------transactions ------------------------
+class TransactionFactory extends Factory{
+   
+    public function definition(): array    {
+        $seller = Seller::has('products')->get()->random();
+        $buyer = User::all()->except($seller->id)->random();
+    
+        return [
+            'quantity' => fake()->numberBetween(1, 3),
+            'buyer_id' => $buyer->id,
+            'product_id' => $seller->products->random()->id,
+            // User::inRandomOrder()->first()->id
+        ];
+    }   
+}
+
+
+
+==================================== SEEDER ============================
+public function run()
+    {
+        Schema::disableForeignKeyConstraints();
+        // DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+
+        User::truncate();
+        Category::truncate();
+        Product::truncate();
+        Transaction::truncate();
+        DB::table('category_product')->truncate();
+
+        User::flushEventListeners();
+        Category::flushEventListeners();
+        Product::flushEventListeners();
+        Transaction::flushEventListeners();
+
+        $usersQuantity = 1000;
+        $categoriesQuantity = 5;
+        $productsQuantity = 1000;
+        $transactionsQuantity = 800;
+
+        User::factory()->count($usersQuantity)->create();
+        Category::factory()->count($categoriesQuantity)->create();
+        
+        // insert data to both Products table and Product_Category PIVOT Table
+        Product::factory()->count($productsQuantity)->create()->each(
+            function ($product) {
+                $categories = Category::all()->random(mt_rand(1, 5))->pluck('id');                
+                $product->categories()->attach($categories);
+            });
+            
+        Transaction::factory()->count($transactionsQuantity)->create();
+
+        // Passport::client()->forceCreate([
+        //     'user_id' => null,
+        //     'name' => '',
+        //     'secret' => 'secret',
+        //     'redirect' => '',
+        //     'personal_access_client' => true,
+        //     'password_client' => true,
+        //     'revoked' => false,
+        // ]);
+
+        // $personalClient = Passport::client()->forceCreate([
+        //     'user_id' => null,
+        //     'name' => '',
+        //     'secret' => 'secret',
+        //     'redirect' => '',
+        //     'personal_access_client' => true,
+        //     'password_client' => false,
+        //     'revoked' => false,
+        // ]);
+
+        // Passport::personalAccessClient()->forceCreate([
+        //     'client_id' => $personalClient->id,
+        // ]);
+
+        // Schema::enableForeignKeyConstraints();
+    }
