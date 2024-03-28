@@ -1,0 +1,22 @@
+
+Go to App/Providers/AppServiceProvider.php
+
+
+public function boot(): void{
+        User::created(function($user){
+           retry(5, function() use ($user){
+            Mail::to($user->email)->send(new UserCreated($user));
+           } , 100); 
+
+        });
+
+        User::updated(function($user){
+            if ($user->isDirty('email')) {
+                retry(5, function() use ($user){
+                    Mail::to($user->email)->send(new UserEmailUpdated($user));
+                }, 100);
+            }
+
+        });
+
+   }
