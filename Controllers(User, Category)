@@ -1,39 +1,8 @@
 ========================== UserController ===================================
 
-<?php
+class UserController extends ApiController{
 
-namespace App\Http\Controllers\User;
-
-use App\Models\User;
-use App\Http\Controllers\ApiController;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use App\Transformers\UserTransformer;
-use App\Mail\UserCreated;
-use Illuminate\Support\Facades\Mail;
-
-use Laravel\Passport\Passport;
-
-
-class UserController extends ApiController
-{
-
-    public function __construct(){
-        $this->middleware('client.credentials')->only(['resend']);
-        $this->middleware('auth:api')->except(['showRegisterForm', 'store', 'verify', 'resend']);
-        $this->middleware('transform.input:' . UserTransformer::class)->only(['update']);
-        $this->middleware('scope:manage-account')->only(['show', 'update']);
-        $this->middleware('can:view,user')->only('show');
-        $this->middleware('can:update,user')->only('update');
-        $this->middleware('can:delete,user')->only('destroy');
-    	}
-
-
-    /**
-     * Display a listing of the resource.
-     */
     public function index(){
-
         $this->allowedAdminAction();
         // if (request()->user()->tokenCan('read-general') || request()->user()->tokenCan('manage-products')) {
         // if (request()->user()->tokenCan()){
@@ -73,24 +42,12 @@ class UserController extends ApiController
 
     }
 
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id){
-        
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, User $user){
         // $user= User::findOrFail($id);
         $request->validate([
             'email'  => ['max:30','confirmed','email','unique:users,email,'.$user->id],
             'admin'  => ['in:'.User::ADMIN_USER. ',' .User::REGULAR_USER],
         ]);
-
 
         if (!empty($request->name)) {
             $user->name = $request->name;
@@ -111,9 +68,6 @@ class UserController extends ApiController
         return $this->showOne($user);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(User $user){
         $user->delete();
         return $this->showOne($user);
@@ -147,6 +101,50 @@ class UserController extends ApiController
 
 }
 
+==================== ProductBuyerTransactionController ==========================
+
+class ProductBuyerTransactionController extends ApiController{
+    
+    public function store(Request $request, Product $product, User $buyer){
+        $request->validate([
+            'quantity' => ['required','integer','min:1'],
+        ]);
+
+        if ($buyer->id == $product->seller_id) {
+            return $this->errorResponse('The buyer must be different from the seller', 409);
+        }
+
+        if (!$buyer->isVerified()) {
+            return $this->errorResponse('The buyer must be a verified user', 409);
+        }
+
+        if (!$product->seller->isVerified()) {
+            return $this->errorResponse('The seller must be a verified user', 409);
+        }
+
+        if (!$product->isAvailable()) {
+            return $this->errorResponse('The product is not available', 409);
+        }
+
+        if ($product->quantity < $request->quantity) {
+            return $this->errorResponse('The product does not have enough units for this transaction', 409);
+        }
+
+        return DB::transaction(function () use ($request, $product, $buyer) {
+            $product->quantity -= $request->quantity;
+            $product->save();
+
+            $transaction = Transaction::create([
+                'quantity' => $request->quantity,
+                'buyer_id' => $buyer->id,
+                'product_id' => $product->id,
+            ]);
+
+            return $this->showOne($transaction, 201);
+        });
+    }
+
+
 
 ========================== SellerProductController  ==========================
 class SellerProductController extends ApiController{
@@ -156,7 +154,6 @@ class SellerProductController extends ApiController{
       // $this->middleware('auth:api');
       $this->middleware('scope:manage-products')->only('store', 'update', 'delete');
    }
-
 
    public function index(Seller $seller){
       // if (request()->user()->tokenCan('read-general') || request()->user()->tokenCan('manage-productss')) {
@@ -240,8 +237,6 @@ class SellerProductController extends ApiController{
          $this->deleteImage('product_images',$product->image);
          $product->delete();
          return $this->showOne($product);
-
-
      }
 
      private function checkSeller(Seller $seller, Product $product){
@@ -249,4 +244,47 @@ class SellerProductController extends ApiController{
             throw new HttpException(422, 'The specified seller is not the actual seller of the product');   
          }
      }
+}
+
+======================= Category ===========================
+class CategoryController extends ApiController{
+      
+    public function index(){
+       $categories= Category::all();       
+       return $this->showAll($categories);
+    }
+
+    public function store(Request $request){        
+        $request->validate([
+            'name'=>['required'],
+            'description'=>['required','max:1000'],
+        ]);
+        $category=Category::create($request->all());
+        return $this->showOne($category, 201);
+    }
+
+    public function show(string $id){
+        $categories= Category::findOrFail($id);
+        return $this->showOne($categories);
+    }
+
+    public function update(Request $request, string $id)    {
+        $category= Category::findOrFail($id);
+        $category->fill($request->only([
+            'name',
+            'description' 
+        ]));
+        if (!$category->isDirty()) {
+            return $this->errorResponse('You have changed nothing', 422);
+        }
+        
+        $category->save();
+        return $this->showOne($category);
+    }
+
+    public function destroy(string $id){
+        $category= Category::findOrFail($id);
+        $category->delete();
+        return $this->showOne($category);
+    }
 }
