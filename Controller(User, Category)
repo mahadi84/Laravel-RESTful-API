@@ -1,0 +1,252 @@
+========================== UserController ===================================
+
+<?php
+
+namespace App\Http\Controllers\User;
+
+use App\Models\User;
+use App\Http\Controllers\ApiController;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use App\Transformers\UserTransformer;
+use App\Mail\UserCreated;
+use Illuminate\Support\Facades\Mail;
+
+use Laravel\Passport\Passport;
+
+
+class UserController extends ApiController
+{
+
+    public function __construct(){
+        $this->middleware('client.credentials')->only(['resend']);
+        $this->middleware('auth:api')->except(['showRegisterForm', 'store', 'verify', 'resend']);
+        $this->middleware('transform.input:' . UserTransformer::class)->only(['update']);
+        $this->middleware('scope:manage-account')->only(['show', 'update']);
+        $this->middleware('can:view,user')->only('show');
+        $this->middleware('can:update,user')->only('update');
+        $this->middleware('can:delete,user')->only('destroy');
+    	}
+
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(){
+
+        $this->allowedAdminAction();
+        // if (request()->user()->tokenCan('read-general') || request()->user()->tokenCan('manage-products')) {
+        // if (request()->user()->tokenCan()){
+        //      return $this->showOne(request()->user());
+        // }
+        $users= User::all();
+        return $this->showAll($users);
+    }
+
+   
+    public function show(User $user){
+        // $user= User::findOrFail($id);
+        return $this->showOne($user);
+    }
+
+
+    
+    public function store(Request $request){
+        // dd($request->all());
+        $request->validate([
+                        'name'=>['required'],
+                        'email'=>['required','email', 'unique:users'],
+                        'password'=>['required', 'min:6']                        
+                        // 'password'=>['required', 'min:6', 'confirmed']                        
+        ]);
+
+        $data= $request->all();
+        $data['admin']= User::REGULAR_USER;
+        $data['verified']= User::UNVERIFIED_USER;
+        $data['verification_token']= User::generateVerificationCode();
+
+        // dd($data['verification_token']);
+        $user=User::create($data);
+
+        // return $this->showOne($user);
+        return $this->showMessage('An email sent to '.$user->email.' for verificaiton');
+
+    }
+
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id){
+        
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, User $user){
+        // $user= User::findOrFail($id);
+        $request->validate([
+            'email'  => ['max:30','confirmed','email','unique:users,email,'.$user->id],
+            'admin'  => ['in:'.User::ADMIN_USER. ',' .User::REGULAR_USER],
+        ]);
+
+
+        if (!empty($request->name)) {
+            $user->name = $request->name;
+        }
+        if($request->has('email') && $user->email != $request->email){
+            $user->verified           = User::UNVERIFIED_USER;
+            $user->verification_token = User::generateVerificationCode();
+            $user->email              = $request->email;
+        }
+        if (!empty($request->password)) {
+            $user->password = $request->password;
+        }
+
+        if(!$user->isDirty()){
+            return $this->errorResponse('You have changed nothing', 422);
+        }
+        $user->save();
+        return $this->showOne($user);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(User $user){
+        $user->delete();
+        return $this->showOne($user);
+    }
+
+    public function verifyUser(string $token){
+        $user=User::where('verification_token', $token)->firstOrFail();
+        $user->verified = User::VERIFIED_USER;
+        $user->verification_token = null;
+        $user->save();
+
+    return $this->successResponse('User verified successfuly', 422);
+    }
+        
+    public function resendVerifyToken(User $user){
+
+        if ($user->isVerified()) {
+            return $this->successResponse('User already verified', 422);  
+        }
+        retry(5, function() use ($user){
+            Mail::to($user->email)->send(new UserCreated($user));
+           } , 100); 
+        return $this->showMessage('An email sent to '.$user->email.' for verificaiton');
+    }
+    
+    public function me(Request $request){
+        $user= $request->user();
+        return $this->showOne($user);
+    }
+
+
+}
+
+
+========================== SellerProductController  ==========================
+class SellerProductController extends ApiController{
+   public function __construct(){
+      parent::__construct();
+      $this->middleware('transform.input:'. ProductTransformer::class)->only(['store', 'update']);      
+      // $this->middleware('auth:api');
+      $this->middleware('scope:manage-products')->only('store', 'update', 'delete');
+   }
+
+
+   public function index(Seller $seller){
+      // if (request()->user()->tokenCan('read-general') || request()->user()->tokenCan('manage-productss')) {
+         $products = $seller->products;
+         return $this->showAll($products);
+   //   }
+   //   throw new AuthorizationException('Invalid scope(s)');
+
+   }
+
+   public function store(Request $request, Product $product, Seller $seller){
+   //    if (!request()->user()->tokenCan('manage-products')) {
+   //         throw new AuthorizationException('Invalid scope(s)');
+   //   }
+
+      $request->validate([
+            'name' =>['required'],
+            'description' =>['required'],
+            'quantity' =>['required'],
+            'image' =>['required', 'image', 'mimes:jpeg,png,jpg', 'max:1024'],
+      ]);
+
+      $data= $request->all();
+      
+      $data['status']= Product::UNAVAILABLE_PRODUCT;
+      $data['seller_id']= $seller->id;
+      $data['image']= $this->uploadImage($request, 'picture', '350,200', 'product_images');
+
+      $product= Product::create($data);
+      return $this->showOne($product);
+     }
+
+     public function update(Request $request, Seller $seller, Product $product){        
+      $request->validate([
+            'name' =>['regex:/^[a-zA-Z0-9\s-]+$/','max:500'],
+            'description' =>['regex:/^[a-zA-Z0-9\s-]+$/','max:500'],
+            'quantity' =>['integer'],
+            'status' => ['in:'. Product::UNAVAILABLE_PRODUCT.','.Product::AVAILABLE_PRODUCT],
+            'image' =>['image','mimes:jpeg,png,jpg', 'max:1024'],
+      ]);
+
+      $this->checkSeller($seller, $product);
+
+      // if(!empty($request->name)){
+      //    $product->name= $request->name;
+      // }
+      // if(!empty($request->description)){
+      //    $product->description= $request->description;
+      // }
+      // if(!empty($request->quantity)){
+      //    $product->quantity= $request->quantity;
+      // }
+
+      $product->fill($request->only([
+         'name','description', 'quantity'
+      ]));
+
+
+      if(!empty($request->status)){
+         $product->status= $request->status;
+
+         if($product->isAvailable() && $product->categories()->count() == 0){
+            return $this->errorResponse('An active product must have at least one category', 409);
+         }
+      }
+      if($request->has('image')){
+         $product->image= $this->updateImage($request, 'image', '350,200', 'product_images', $product->image);
+      }
+
+      if (!$product->isDirty()) {
+            return $this->errorResponse('Nothing to change', 211);
+      }
+      $product->save();
+      return $this->showOne($product);
+     }
+
+
+     public function destroy(Seller $seller, Product $product){
+         $this->checkSeller($seller, $product);
+         
+         $this->deleteImage('product_images',$product->image);
+         $product->delete();
+         return $this->showOne($product);
+
+
+     }
+
+     private function checkSeller(Seller $seller, Product $product){
+         if($seller->id != $product->seller_id ){
+            throw new HttpException(422, 'The specified seller is not the actual seller of the product');   
+         }
+     }
+}
