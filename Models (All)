@@ -76,7 +76,7 @@ class Category extends Model{
         });
 
 
-===================== CATEGORY-PRODUCT =====================
+===================== 03. CATEGORY-PRODUCT (pivot) =====================
 Schema::create('category_product', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('category_id')->unsigned();
@@ -87,7 +87,7 @@ Schema::create('category_product', function (Blueprint $table) {
             $table->foreign('product_id')->references('id')->on('products');
         });
 
-====================== 03. PRODUCT =========================
+====================== 04. PRODUCT =========================
 class Product extends Model{
     use HasFactory;
 
@@ -128,7 +128,7 @@ Schema::create('products', function (Blueprint $table) {
             
             $table->foreign('seller_id')->references('id')->on('users');
         });
-==================== 04.TRANSACTION ==============================
+==================== 05.TRANSACTION ==============================
 class Transaction extends Model{
     use HasFactory;
 
@@ -155,7 +155,7 @@ Schema::create('transactions', function (Blueprint $table) {
             $table->foreign('product_id')->references('id')->on('products');
         });
 
-===================== 05. SELLER ===============================
+===================== 06. SELLER ===============================
 class Seller extends User{
     use HasFactory;
 
@@ -170,7 +170,7 @@ class Seller extends User{
    
 }
 
-===================== 06. BUYER ===============================
+===================== 07. BUYER ===============================
 class Buyer extends User{
     use HasFactory;
    
