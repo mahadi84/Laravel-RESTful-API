@@ -6,7 +6,7 @@ Why Policy and Gate?
 =================Create and Use Policy====================
 01.--php artisan make:policy BuyerPolicy --model=Buyer
 02.--Check now App\Policies Folder
-03.--Create function(s) as per your need for example;
+03.--Create function(s) as per I need for example;
     use App\Models\User;
     use App\Models\Buyer;
      public function view(User $user, Buyer $buyer){
