@@ -286,3 +286,31 @@ class CategoryController extends ApiController{
         return $this->showOne($category);
     }
 }
+============================== ProductCategoriesControlle ============================
+
+class ProductCategoriesController extends ApiController
+{
+    // Display a listing of the resource.
+    public function index(Product $product){
+       $categories= $product->categories;
+       return $this->showAll($categories);
+    }
+
+    //Update the specified resource in storage.
+    public function update(Product $product, Category $category){
+        // attach, syns, synscwithoutDetaching
+        $product->categories()->syncwithoutDetaching([$category->id]);
+        return $this->showAll($product->categories);         
+    }
+
+    // Remove the specified resource from storage.
+    public function destroy(Product $product, Category $category){
+        if($product->categories($category->id)){
+            $product->categories()->detach($category->id);
+        }
+        return $this->showAll($product->categories);        
+        
+    }
+}
+
+
