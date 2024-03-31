@@ -168,9 +168,9 @@ class SellerProductController extends ApiController{
    //   }
 
       $request->validate([
-            'name' =>['required'],
-            'description' =>['required'],
-            'quantity' =>['required'],
+            'name' =>['required', 'string', 'max:2'],
+            'description' =>['required','string', 'max:2'],
+            'quantity' =>['required','integer'],
             'image' =>['required', 'image', 'mimes:jpeg,png,jpg', 'max:1024'],
       ]);
 
@@ -186,8 +186,8 @@ class SellerProductController extends ApiController{
 
      public function update(Request $request, Seller $seller, Product $product){        
       $request->validate([
-            'name' =>['regex:/^[a-zA-Z0-9\s-]+$/','max:500'],
-            'description' =>['regex:/^[a-zA-Z0-9\s-]+$/','max:500'],
+            'name' =>['string','min:2'],
+            'description' =>['string','max:500'],
             'quantity' =>['integer'],
             'status' => ['in:'. Product::UNAVAILABLE_PRODUCT.','.Product::AVAILABLE_PRODUCT],
             'image' =>['image','mimes:jpeg,png,jpg', 'max:1024'],
@@ -208,7 +208,6 @@ class SellerProductController extends ApiController{
       $product->fill($request->only([
          'name','description', 'quantity'
       ]));
-
 
       if(!empty($request->status)){
          $product->status= $request->status;
@@ -297,7 +296,7 @@ class ProductCategoriesController extends ApiController
        return $this->showAll($categories);
     }
 
-    //Update the specified resource in storage.
+    // Update the specified resource in storage.
     public function update(Product $product, Category $category){
         // attach, syns, synscwithoutDetaching
         $product->categories()->syncwithoutDetaching([$category->id]);
@@ -309,9 +308,8 @@ class ProductCategoriesController extends ApiController
         if($product->categories($category->id)){
             $product->categories()->detach($category->id);
         }
-        return $this->showAll($product->categories);        
-        
-    }
+        return $this->showAll($product->categories); 
+     }
 }
 
 
