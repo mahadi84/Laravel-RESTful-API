@@ -286,7 +286,7 @@ class CategoryController extends ApiController{
         return $this->showOne($category);
     }
 }
-============================== ProductCategoriesControlle ============================
+============================== ProductCategoriesController ============================
 
 class ProductCategoriesController extends ApiController
 {
