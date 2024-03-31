@@ -1,0 +1,153 @@
+
+
+  01.Buyer-Category
+        -Product
+        -Seller
+        -Transaction	 
+02.Category-Buyer
+       -Product
+       -Seller
+       -Transaction
+03.Product-Buyer
+      -Category
+      -Seller
+      -Transaction	 
+04.Seller-Buyer
+       -Category
+       -Product
+       -Transaction
+05.Transaction-Buyer
+      -Category
+      -Product
+      -Seller	
+
+
+
+========================= Buyer =========================
+01.Buyer-Category
+        public function index(Buyer $buyer){
+                $sellers = $buyer->transactions()
+                  ->with('product.categories')
+                    ->get()
+                    ->pluck('product.categories')
+                    ->collapse()
+                    ->unique('id')
+                    ->values();
+                return $this->showAll($sellers);
+            }	
+02.Buyer-Product
+        public function index(Buyer $buyer){
+         $products = $buyer->transactions()
+                                     ->with('product')
+                                     ->get()
+                                     ->pluck('product');
+            return $this->showAll($products);
+        }
+03.Buyer-Seller
+        public function index(Buyer $buyer){
+                $sellers = $buyer->transactions()
+                     ->with('product.seller')
+                    ->get()
+                    ->pluck('product.seller')
+                    ->unique('id')
+                    ->values();
+
+                return $this->showAll($sellers);
+            }	04.Buyer-Transaction
+        public function index(Buyer $buyer){
+            $transactions = $buyer->transactions;
+            return $this->showAll($transactions);
+        }
+
+
+
+
+========================= Category =========================
+01.Category-Buyer
+        $buyers = $category->products()
+            ->whereHas('transactions')
+            ->with('transactions.buyer')
+            ->get()
+            ->pluck('transactions')
+            ->collapse()
+            ->pluck('buyer')
+            ->unique('id')
+            ->values();	
+02.Category-Product
+        $products = $category->products;
+03.Category-Seller
+        $sellers = $category->products()
+            ->with('seller')
+            ->get()
+            ->pluck('seller')
+            ->unique()
+            ->values();	
+04.Category-Transaction
+        $transactions = $category->products()
+            ->whereHas('transactions')
+            ->with('transactions')
+            ->get()
+            ->pluck('transactions')
+            ->collapse();
+
+
+========================= Product =========================
+01.Product-Buyer
+        $buyers = $product->transactions()
+            ->with('buyer')
+            ->get()
+            ->pluck('buyer')
+            ->unique('id')
+            ->values();	
+02.Product-Category
+        $categories = $product->categories;
+03.Product-Seller
+           $seller= $product->seller;	
+04.Product-Transaction
+         $transactions = $product->transactions;
+
+
+========================== Seller =============================
+01.Seller-Buyer
+$buyers = $seller->products()
+            ->whereHas('transactions')
+            ->with('transactions.buyer')
+            ->get()
+            ->pluck('transactions')
+            ->collapse()
+            ->pluck('buyer')
+            ->unique('id')
+            ->values();	
+02. Seller -Category
+$categories = $seller->products()
+            ->whereHas('categories')
+            ->with('categories')
+            ->get()
+            ->pluck('categories')
+            ->collapse()
+            ->unique('id')
+            ->values();
+
+03. Seller -Product
+             $products = $seller->products;
+04. Seller -Transaction
+$transactions = $seller->products()
+            ->whereHas('transactions')
+            ->with('transactions')
+            ->get()
+            ->pluck('transactions')
+            ->collapse();
+
+
+========================= Transaction =========================
+01.Transaction-Buyer
+           $buyer= $transaction->buyer;	
+02.Transaction-Category
+        $categories = $transaction->product->categories;
+
+03.Transaction-Product
+           $products= $transaction->product;
+	04.Transaction-Seller
+         $seller = $transaction->product->seller;
+
+
