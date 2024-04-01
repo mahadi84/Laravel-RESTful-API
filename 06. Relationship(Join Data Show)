@@ -1,6 +1,6 @@
 
 
-  01.Buyer-Category
+01.Buyer-Category
         -Product
         -Seller
         -Transaction	 
@@ -23,7 +23,7 @@
 
 
 
-========================= Buyer =========================
+========================= 01. Buyer =========================
 01.Buyer-Category
         public function index(Buyer $buyer){
                 $sellers = $buyer->transactions()
@@ -62,7 +62,7 @@
 
 
 
-========================= Category =========================
+========================= 02. Category =========================
 01.Category-Buyer
         $buyers = $category->products()
             ->whereHas('transactions')
@@ -91,7 +91,7 @@
             ->collapse();
 
 
-========================= Product =========================
+========================= 03. Product =========================
 01.Product-Buyer
         $buyers = $product->transactions()
             ->with('buyer')
@@ -107,7 +107,7 @@
          $transactions = $product->transactions;
 
 
-========================== Seller =============================
+========================== 04. Seller =============================
 01.Seller-Buyer
 $buyers = $seller->products()
             ->whereHas('transactions')
@@ -139,7 +139,7 @@ $transactions = $seller->products()
             ->collapse();
 
 
-========================= Transaction =========================
+========================= 05. Transaction =========================
 01.Transaction-Buyer
            $buyer= $transaction->buyer;	
 02.Transaction-Category
