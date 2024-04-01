@@ -1,21 +1,21 @@
 
 
-01.Buyer-Category
+01.Buyer-Category -----------(VI)
         -Product
-        -Seller
+        -Seller   -----------(VI)
         -Transaction	 
-02.Category-Buyer
+02.Category-Buyer -----------(VI)
        -Product
-       -Seller
-       -Transaction
-03.Product-Buyer
+       -Seller    -----------(VI)
+       -Transaction----------(VI)
+03.Product-Buyer  -----------(VI)
       -Category
       -Seller
       -Transaction	 
-04.Seller-Buyer
-       -Category
+04.Seller-Buyer  -----------(VI)
+       -Category -----------(VI)
        -Product
-       -Transaction
+       -Transaction --------(VI)
 05.Transaction-Buyer
       -Category
       -Product
