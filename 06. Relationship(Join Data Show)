@@ -12,7 +12,7 @@
       -Category
       -Seller
       -Transaction	 
-04.Seller-Buyer  -----------(VI)
+04.Seller-Buyer  -----------(VVI)
        -Category -----------(VI)
        -Product
        -Transaction --------(VI)
