@@ -53,7 +53,8 @@ C.Buyer-Seller
                     ->values();
 
                 return $this->showAll($sellers);
-            }	04.Buyer-Transaction
+            }	
+D.Buyer-Transaction
         public function index(Buyer $buyer){
             $transactions = $buyer->transactions;
             return $this->showAll($transactions);
