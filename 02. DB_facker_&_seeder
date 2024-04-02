@@ -1,6 +1,24 @@
-=========================FACKER===========================
+------------------------------------------------------------------------
+==================================== FACKER ============================
 
-------------------------Users------------------------
+--------Exceptional-------------
+'email' => fake()->unique()->safeEmail,
+'remember_token' => Str::random(10),
+'verified' => $verified = fake()->randomElement([User::VERIFIED_USER, User::UNVERIFIED_USER]),
+'verification_token' => $verified == User::VERIFIED_USER ? null : User::generateVerificationCode(),
+'quantity' => fake()->numberBetween(1, 10),
+'seller_id' => User::all()->random()->id,
+
+---
+$seller = Seller::has('products')->get()->random();  //***transactions facker
+$buyer = User::all()->except($seller->id)->random();
+    return [
+     'buyer_id' => $buyer->id,
+     'product_id' => $seller->products->random()->id,
+    ]
+------------------------------
+
+============================= Users ================================
 class UserFactory extends Factory{
     //The current password being used by the factory.
     protected static ?string $password;
@@ -9,7 +27,6 @@ class UserFactory extends Factory{
         return [
             'name' => fake()->name,
             'email' => fake()->unique()->safeEmail,
-            // 'password' => static::$password ??= Hash::make('password'),
             'password' => '123456',
             'remember_token' => Str::random(10),
             'verified' => $verified = fake()->randomElement([User::VERIFIED_USER, User::UNVERIFIED_USER]),
@@ -18,15 +35,9 @@ class UserFactory extends Factory{
         ];
     }
 
-    //Indicate that the model's email address should be unverified.
-    public function unverified(): static    {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
-    }
 }
 
-------------------------category-----------------------------------
+============================= Category =============================
 class CategoryFactory extends Factory{
     public function definition(): array{
         return [
@@ -37,7 +48,7 @@ class CategoryFactory extends Factory{
 }
 
 
-------------------------product--------------------------
+============================= Product =============================
 class ProductFactory extends Factory{   
     public function definition(): array    {
         return [
@@ -52,7 +63,7 @@ class ProductFactory extends Factory{
     }
 }
 
-------------------------transactions ------------------------
+============================= Transactions =============================
 class TransactionFactory extends Factory{
    
     public function definition(): array    {
@@ -69,8 +80,9 @@ class TransactionFactory extends Factory{
 }
 
 
-
+------------------------------------------------------------------------
 ==================================== SEEDER ============================
+------------------------------------------------------------------------
 public function run()
     {
         Schema::disableForeignKeyConstraints();
